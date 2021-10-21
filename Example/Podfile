@@ -1,0 +1,19 @@
+source 'https://github.com/CocoaPods/Specs.git'
+
+use_frameworks!
+
+target 'TinkoffMockStrapping_Example' do
+  pod 'TinkoffMockStrapping', :subspecs => ['Core', 'Swifter'], :path => '../'
+
+  # Support
+  pod 'SwiftGen', '6.1.0'
+  pod 'SwiftLint', '~> 0.35.0'
+  pod 'SwiftFormat/CLI', '~> 0.40.0'
+
+  target 'TinkoffMockStrapping_Tests' do
+    inherit! :search_paths
+
+    pod 'Nimble', '~> 9.2.1'
+  end
+
+end
