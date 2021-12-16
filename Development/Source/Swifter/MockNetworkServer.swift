@@ -39,23 +39,53 @@ public final class MockNetworkServer: BaseNetworkMocker {
         }
 
         super.setStub(stub)
-        httpServer[stub.request.url] = getResponse
+
+        let response: ((HttpRequest) -> HttpResponse) = { request in
+            self.logger?.startProcessing(theRequest: request)
+
+            usleep(useconds_t(stub.delay * 1_000_000))
+
+            guard let responseStub = self.getResponseStub(for: request) else {
+                self.logger?.notFound(stubForRequest: request)
+                return .notFound
+            }
+
+            switch responseStub.response {
+            case let .json(json):
+                self.logger?.jsonResponseFound()
+                return self.process(json: json)
+
+            case let .data(data, type):
+                self.logger?.dataResponseFound()
+                return self.process(data: data, contentType: type)
+
+            case let .error(error):
+                self.logger?.errorResponseFound(withJSONPayload: error.json != nil)
+                return self.process(error: error)
+
+            case .connectionError:
+                self.logger?.connectionErrorResponseFound()
+                fatalError("ATTENTION! " +
+                    "The `\(String(describing: responseStub.response))` " +
+                    "does not supported in the UI tests.")
+            }
+        }
 
         switch stub.request.httpMethod {
         case .GET:
-            httpServer.GET[stub.request.url] = getResponse
+            httpServer.GET[stub.request.url] = response
         case .POST:
-            httpServer.POST[stub.request.url] = getResponse
+            httpServer.POST[stub.request.url] = response
         case .PUT:
-            httpServer.PUT[stub.request.url] = getResponse
+            httpServer.PUT[stub.request.url] = response
         case .DELETE:
-            httpServer.DELETE[stub.request.url] = getResponse
+            httpServer.DELETE[stub.request.url] = response
         case .PATCH:
-            httpServer.PATCH[stub.request.url] = getResponse
+            httpServer.PATCH[stub.request.url] = response
         case .HEAD:
-            httpServer.HEAD[stub.request.url] = getResponse
+            httpServer.HEAD[stub.request.url] = response
         case .ANY:
-            httpServer[stub.request.url] = getResponse
+            httpServer[stub.request.url] = response
         }
     }
 }
@@ -75,7 +105,10 @@ extension MockNetworkServer: MockNetworkServerProtocol {
 
         server = HttpServer()
         start(server: server, on: port)
-        server?.notFoundHandler = getResponse
+
+        server?.notFoundHandler = { _ in
+            .notFound
+        }
 
         guard let port = try? server?.port() else {
             return nil
@@ -110,43 +143,6 @@ extension MockNetworkServer: MockNetworkServerProtocol {
 // MARK: - Private API
 
 private extension MockNetworkServer {
-
-    /// Возвращает http-ответ для указанного запроса.
-    /// - Parameters:
-    ///   - request: http-запрос.
-    /// - Returns: Возвращает http-ответ на основе найденого стаба либо один из стандартных http-ответов.
-    /// Returns http-response for the request
-    /// - Parameters:
-    ///   - request: http-request
-    /// - Returns: http-response based on found stub or any standart http-response
-    func getResponse(request: HttpRequest) -> HttpResponse {
-        logger?.startProcessing(theRequest: request)
-
-        guard let responseStub = getResponseStub(for: request) else {
-            logger?.notFound(stubForRequest: request)
-            return .notFound
-        }
-
-        switch responseStub.response {
-        case let .json(json):
-            logger?.jsonResponseFound()
-            return process(json: json)
-
-        case let .data(data, type):
-            logger?.dataResponseFound()
-            return process(data: data, contentType: type)
-
-        case let .error(error):
-            logger?.errorResponseFound(withJSONPayload: error.json != nil)
-            return process(error: error)
-
-        case .connectionError:
-            logger?.connectionErrorResponseFound()
-            fatalError("ATTENTION! " +
-                "The `\(String(describing: responseStub.response))` " +
-                "does not supported in the UI tests.")
-        }
-    }
 
     /// Выполняет обработку содержимого стаба с ошибкой и возвращает HTTP-ответ.
     /// - Parameter error: Описание ошибки.
