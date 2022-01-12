@@ -40,35 +40,12 @@ public final class MockNetworkServer: BaseNetworkMocker {
 
         super.setStub(stub)
 
-        let response: ((HttpRequest) -> HttpResponse) = { request in
-            self.logger?.startProcessing(theRequest: request)
-
+        let response: ((HttpRequest) -> HttpResponse) = { [weak self] request in
+            guard let self = self else {
+                fatalError("Sever doesn't started")
+            }
             sleep(stub.delay)
-
-            guard let responseStub = self.getResponseStub(for: request) else {
-                self.logger?.notFound(stubForRequest: request)
-                return .notFound
-            }
-
-            switch responseStub.response {
-            case let .json(json):
-                self.logger?.jsonResponseFound()
-                return self.process(json: json)
-
-            case let .data(data, type):
-                self.logger?.dataResponseFound()
-                return self.process(data: data, contentType: type)
-
-            case let .error(error):
-                self.logger?.errorResponseFound(withJSONPayload: error.json != nil)
-                return self.process(error: error)
-
-            case .connectionError:
-                self.logger?.connectionErrorResponseFound()
-                fatalError("ATTENTION! " +
-                    "The `\(String(describing: responseStub.response))` " +
-                    "does not supported in the UI tests.")
-            }
+            return self.getResponse(request: request)
         }
 
         switch stub.request.httpMethod {
@@ -183,6 +160,35 @@ private extension MockNetworkServer {
 
         return process(data: data, contentType: "application/json")
     }
+
+    func getResponse(request: HttpRequest) -> HttpResponse {
+        logger?.startProcessing(theRequest: request)
+
+        guard let responseStub = getResponseStub(for: request) else {
+            logger?.notFound(stubForRequest: request)
+            return .notFound
+        }
+
+        switch responseStub.response {
+        case let .json(json):
+            logger?.jsonResponseFound()
+            return process(json: json)
+
+        case let .data(data, type):
+            logger?.dataResponseFound()
+            return process(data: data, contentType: type)
+
+        case let .error(error):
+            logger?.errorResponseFound(withJSONPayload: error.json != nil)
+            return process(error: error)
+
+        case .connectionError:
+            logger?.connectionErrorResponseFound()
+            fatalError("ATTENTION! " +
+                "The `\(String(describing: responseStub.response))` " +
+                "does not supported in the UI tests.")
+        }
+    }
 }
 
 // MARK: - HttpRequest Extension
@@ -223,6 +229,6 @@ fileprivate extension JSON {
 
 // MARK: - Private
 
-fileprivate func sleep(_ delay: TimeInterval) {
+private func sleep(_ delay: TimeInterval) {
     usleep(useconds_t(delay * 1_000_000))
 }
