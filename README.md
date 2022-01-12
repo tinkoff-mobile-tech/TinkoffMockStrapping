@@ -61,6 +61,13 @@ let stubRequest = NetworkStubRequest(url: "someUrlAsString",
 
 Also we provide `excludedQuery`. If you don't want to see some parameters in your request, use this option.
 
+## Delay? Yes
+
+```swift
+let delayInSeconds: TimeInterval = 5
+let stub = NetworkStub(request: stubRequest, response: stubResponse, delay: delayInSeconds)
+```
+
 ## History
 
 If you want to know which requests were called, you can use `history`.
