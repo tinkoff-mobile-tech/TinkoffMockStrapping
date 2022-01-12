@@ -17,6 +17,6 @@ public protocol NetworkStubProtocol: AnyObject {
     /// Возвращает ответ, которым должен подменен запрос.
     var response: NetworkStubResponse { get set }
 
-    /// Delay for stub
+    /// Delay for stub in seconds
     var delay: TimeInterval { get }
 }

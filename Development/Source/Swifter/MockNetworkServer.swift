@@ -43,7 +43,7 @@ public final class MockNetworkServer: BaseNetworkMocker {
         let response: ((HttpRequest) -> HttpResponse) = { request in
             self.logger?.startProcessing(theRequest: request)
 
-            usleep(useconds_t(stub.delay * 1_000_000))
+            sleep(stub.delay)
 
             guard let responseStub = self.getResponseStub(for: request) else {
                 self.logger?.notFound(stubForRequest: request)
@@ -219,4 +219,10 @@ fileprivate extension JSON {
 
         return data
     }
+}
+
+// MARK: - Private
+
+fileprivate func sleep(_ delay: TimeInterval) {
+    usleep(useconds_t(delay * 1_000_000))
 }
