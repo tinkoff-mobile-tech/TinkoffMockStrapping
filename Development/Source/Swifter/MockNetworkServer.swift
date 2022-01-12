@@ -35,14 +35,14 @@ public final class MockNetworkServer: BaseNetworkMocker {
     /// Stub setter
     public override func setStub(_ stub: NetworkStubProtocol) {
         guard let httpServer = server else {
-            fatalError("Couldn't set the stub because the server didn't start.")
+            fatalError("Couldn't set the stub because the server hasn't started.")
         }
 
         super.setStub(stub)
 
         let response: ((HttpRequest) -> HttpResponse) = { [weak self] request in
             guard let self = self else {
-                fatalError("Server didn't start")
+                fatalError("Server hasn't started")
             }
             sleep(stub.delay)
             return self.getResponse(request: request)
