@@ -227,8 +227,8 @@ fileprivate extension JSON {
     }
 }
 
-// MARK: - Private
+// MARK: - Internal
 
-private func sleep(_ delay: TimeInterval) {
+func sleep(_ delay: TimeInterval) {
     usleep(useconds_t(delay * 1_000_000))
 }
