@@ -42,7 +42,7 @@ public final class MockNetworkServer: BaseNetworkMocker {
 
         let response: ((HttpRequest) -> HttpResponse) = { [weak self] request in
             guard let self = self else {
-                fatalError("MockNetworkServer deallocated")
+                fatalError("MockNetworkServer has deallocated")
             }
             sleep(stub.delay)
             return self.getResponse(request: request)
@@ -77,7 +77,7 @@ extension MockNetworkServer: MockNetworkServerProtocol {
     /// - Returns: Port number where server is started or `nil` if server has not started or selected port is not available
     public func start() -> UInt16? {
         guard server == nil else {
-            fatalError("Attempted to start the server when it already started.")
+            fatalError("Attempted to start the server when it has already started.")
         }
 
         server = HttpServer()
@@ -98,7 +98,7 @@ extension MockNetworkServer: MockNetworkServerProtocol {
     /// Stops the server and removes all stubs
     public func stop() {
         guard server != nil else {
-            fatalError("Attempted to stop the server when it not started.")
+            fatalError("Attempted to stop the server when it is not started.")
         }
 
         server?.stop()
