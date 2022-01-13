@@ -42,7 +42,7 @@ public final class MockNetworkServer: BaseNetworkMocker {
 
         let response: ((HttpRequest) -> HttpResponse) = { [weak self] request in
             guard let self = self else {
-                fatalError("Server hasn't started")
+                fatalError("MockNetworkServer deallocated")
             }
             sleep(stub.delay)
             return self.getResponse(request: request)
