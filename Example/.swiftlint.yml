@@ -10,7 +10,7 @@ excluded:
 - Tests
 
 disabled_rules:
-# У линий не должно пыть просбелов справа от текста
+# У линий не должно пыть пробелов справа от текста
 - trailing_whitespace
 - class_delegate_protocol
 # Делегаты должны быть weak, чтобы избежать цикла сильных ссылок

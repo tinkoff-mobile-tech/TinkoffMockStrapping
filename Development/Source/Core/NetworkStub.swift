@@ -20,12 +20,16 @@ open class NetworkStub: NetworkStubProtocol {
 
     public let request: NetworkStubRequest
     public var response: NetworkStubResponse
+    public var delay: TimeInterval
 
     // MARK: Lifecycle
 
-    public required init(request: NetworkStubRequest, response: NetworkStubResponse) {
+    public required init(request: NetworkStubRequest,
+                         response: NetworkStubResponse,
+                         delay: TimeInterval = 0) {
         self.request = request
         self.response = response
+        self.delay = delay
     }
 }
 

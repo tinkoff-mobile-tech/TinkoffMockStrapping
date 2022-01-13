@@ -35,27 +35,34 @@ public final class MockNetworkServer: BaseNetworkMocker {
     /// Stub setter
     public override func setStub(_ stub: NetworkStubProtocol) {
         guard let httpServer = server else {
-            fatalError("Couldn't set the stub because the server does not started.")
+            fatalError("Couldn't set the stub because the server hasn't started.")
         }
 
         super.setStub(stub)
-        httpServer[stub.request.url] = getResponse
+
+        let response: ((HttpRequest) -> HttpResponse) = { [weak self] request in
+            guard let self = self else {
+                fatalError("MockNetworkServer has deallocated")
+            }
+            sleep(stub.delay)
+            return self.getResponse(request: request)
+        }
 
         switch stub.request.httpMethod {
         case .GET:
-            httpServer.GET[stub.request.url] = getResponse
+            httpServer.GET[stub.request.url] = response
         case .POST:
-            httpServer.POST[stub.request.url] = getResponse
+            httpServer.POST[stub.request.url] = response
         case .PUT:
-            httpServer.PUT[stub.request.url] = getResponse
+            httpServer.PUT[stub.request.url] = response
         case .DELETE:
-            httpServer.DELETE[stub.request.url] = getResponse
+            httpServer.DELETE[stub.request.url] = response
         case .PATCH:
-            httpServer.PATCH[stub.request.url] = getResponse
+            httpServer.PATCH[stub.request.url] = response
         case .HEAD:
-            httpServer.HEAD[stub.request.url] = getResponse
+            httpServer.HEAD[stub.request.url] = response
         case .ANY:
-            httpServer[stub.request.url] = getResponse
+            httpServer[stub.request.url] = response
         }
     }
 }
@@ -70,12 +77,15 @@ extension MockNetworkServer: MockNetworkServerProtocol {
     /// - Returns: Port number where server is started or `nil` if server has not started or selected port is not available
     public func start() -> UInt16? {
         guard server == nil else {
-            fatalError("Attempted to start the server when it already started.")
+            fatalError("Attempted to start the server when it has already started.")
         }
 
         server = HttpServer()
         start(server: server, on: port)
-        server?.notFoundHandler = getResponse
+
+        server?.notFoundHandler = { _ in
+            .notFound
+        }
 
         guard let port = try? server?.port() else {
             return nil
@@ -88,7 +98,7 @@ extension MockNetworkServer: MockNetworkServerProtocol {
     /// Stops the server and removes all stubs
     public func stop() {
         guard server != nil else {
-            fatalError("Attempted to stop the server when it not started.")
+            fatalError("Attempted to stop the server when it is not started.")
         }
 
         server?.stop()
@@ -110,43 +120,6 @@ extension MockNetworkServer: MockNetworkServerProtocol {
 // MARK: - Private API
 
 private extension MockNetworkServer {
-
-    /// Возвращает http-ответ для указанного запроса.
-    /// - Parameters:
-    ///   - request: http-запрос.
-    /// - Returns: Возвращает http-ответ на основе найденого стаба либо один из стандартных http-ответов.
-    /// Returns http-response for the request
-    /// - Parameters:
-    ///   - request: http-request
-    /// - Returns: http-response based on found stub or any standart http-response
-    func getResponse(request: HttpRequest) -> HttpResponse {
-        logger?.startProcessing(theRequest: request)
-
-        guard let responseStub = getResponseStub(for: request) else {
-            logger?.notFound(stubForRequest: request)
-            return .notFound
-        }
-
-        switch responseStub.response {
-        case let .json(json):
-            logger?.jsonResponseFound()
-            return process(json: json)
-
-        case let .data(data, type):
-            logger?.dataResponseFound()
-            return process(data: data, contentType: type)
-
-        case let .error(error):
-            logger?.errorResponseFound(withJSONPayload: error.json != nil)
-            return process(error: error)
-
-        case .connectionError:
-            logger?.connectionErrorResponseFound()
-            fatalError("ATTENTION! " +
-                "The `\(String(describing: responseStub.response))` " +
-                "does not supported in the UI tests.")
-        }
-    }
 
     /// Выполняет обработку содержимого стаба с ошибкой и возвращает HTTP-ответ.
     /// - Parameter error: Описание ошибки.
@@ -187,6 +160,35 @@ private extension MockNetworkServer {
 
         return process(data: data, contentType: "application/json")
     }
+
+    func getResponse(request: HttpRequest) -> HttpResponse {
+        logger?.startProcessing(theRequest: request)
+
+        guard let responseStub = getResponseStub(for: request) else {
+            logger?.notFound(stubForRequest: request)
+            return .notFound
+        }
+
+        switch responseStub.response {
+        case let .json(json):
+            logger?.jsonResponseFound()
+            return process(json: json)
+
+        case let .data(data, type):
+            logger?.dataResponseFound()
+            return process(data: data, contentType: type)
+
+        case let .error(error):
+            logger?.errorResponseFound(withJSONPayload: error.json != nil)
+            return process(error: error)
+
+        case .connectionError:
+            logger?.connectionErrorResponseFound()
+            fatalError("ATTENTION! " +
+                "The `\(String(describing: responseStub.response))` " +
+                "does not supported in the UI tests.")
+        }
+    }
 }
 
 // MARK: - HttpRequest Extension
@@ -223,4 +225,10 @@ fileprivate extension JSON {
 
         return data
     }
+}
+
+// MARK: - Internal
+
+func sleep(_ delay: TimeInterval) {
+    usleep(useconds_t(delay * 1_000_000))
 }
