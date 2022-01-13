@@ -56,13 +56,17 @@ public extension NetworkStub {
     static func `default`<Stub: NetworkStub>(url: String,
                                              query: [String: String] = [:],
                                              excludedQuery: [String: String?] = [:],
+                                             httpMethod: NetworkStubMethod = .ANY,
                                              jsonFileName: String,
                                              bundle: Bundle? = nil,
                                              jsonModifier: JsonModifier? = nil) -> Stub {
 
         let json = NetworkStub.readJSON(jsonFileName: jsonFileName, bundle: bundle ?? Bundle(for: Self.self))
 
-        let request = NetworkStubRequest(url: url, query: query, excludedQuery: excludedQuery)
+        let request = NetworkStubRequest(url: url,
+                                         query: query,
+                                         excludedQuery: excludedQuery,
+                                         httpMethod: httpMethod)
         let stub = Stub(request: request, response: .json(json))
 
         jsonModifier?(stub)
@@ -85,9 +89,13 @@ public extension NetworkStub {
     ///   - excludedQuery: Query-params parameters that are definitely not in the request
     static func connectionError<Stub: NetworkStub>(url: String,
                                                    query: [String: String] = [:],
-                                                   excludedQuery: [String: String?] = [:]) -> Stub {
+                                                   excludedQuery: [String: String?] = [:],
+                                                   httpMethod: NetworkStubMethod = .ANY) -> Stub {
 
-        let request = NetworkStubRequest(url: url, query: query, excludedQuery: excludedQuery)
+        let request = NetworkStubRequest(url: url,
+                                         query: query,
+                                         excludedQuery: excludedQuery,
+                                         httpMethod: httpMethod)
         let stub = Stub(request: request, response: .connectionError)
 
         return stub
@@ -110,10 +118,14 @@ public extension NetworkStub {
     static func error<Stub: NetworkStub>(url: String,
                                          query: [String: String] = [:],
                                          excludedQuery: [String: String?] = [:],
+                                         httpMethod: NetworkStubMethod = .ANY,
                                          error: NetworkStubError,
                                          jsonModifier: JsonModifier? = nil) -> Stub {
 
-        let request = NetworkStubRequest(url: url, query: query, excludedQuery: excludedQuery)
+        let request = NetworkStubRequest(url: url,
+                                         query: query,
+                                         excludedQuery: excludedQuery,
+                                         httpMethod: httpMethod)
         let stub = Stub(request: request, response: .error(error))
         jsonModifier?(stub)
 
