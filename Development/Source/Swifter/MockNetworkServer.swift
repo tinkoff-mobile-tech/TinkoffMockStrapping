@@ -81,13 +81,19 @@ extension MockNetworkServer: MockNetworkServerProtocol {
         }
 
         server = HttpServer()
-        start(server: server, on: port)
+        do {
+            try server?.start(port)
+        } catch {
+            server = nil
+            return nil
+        }
 
         server?.notFoundHandler = { _ in
             .notFound
         }
 
         guard let port = try? server?.port() else {
+            server = nil
             return nil
         }
 
@@ -104,16 +110,6 @@ extension MockNetworkServer: MockNetworkServerProtocol {
         server?.stop()
         removeAllStubs()
         server = nil
-    }
-
-    // MARK: Private
-
-    private func start(server: HttpServer?, on port: in_port_t) {
-        do {
-            try server?.start(port)
-        } catch {
-            fatalError("Couldn't start the mock network server. \n\(String(describing: error))")
-        }
     }
 }
 
