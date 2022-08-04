@@ -120,7 +120,7 @@ public extension BaseNetworkMocker {
         let matchedStub = stubs
             .filter { $0.request.matches(to: request) }
             .sorted { $0.request.query.count > $1.request.query.count }
-            .sorted { $0.request.headersDictionary?.count ?? 0 > $1.request.headersDictionary?.count ?? 0 }
+            .sorted { $0.request.headersDictionary.count > $1.request.headersDictionary.count }
             .first
 
         let historyRequest = HistoryHttpRequest(url: request.url,
@@ -147,6 +147,6 @@ private extension BaseNetworkMocker {
         let query: [String: String]
         let bodyJson: JSON?
         let httpMethod: NetworkStubMethod
-        let headersDictionary: [String : String]?
+        let headersDictionary: [String : String]
     }
 }

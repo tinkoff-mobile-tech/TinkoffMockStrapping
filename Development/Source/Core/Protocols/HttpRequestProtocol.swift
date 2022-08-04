@@ -30,5 +30,5 @@ public protocol HttpRequestProtocol {
     
     /// Заголовки запроса.
     /// Headers
-    var headersDictionary: [String: String]? { get }
+    var headersDictionary: [String: String] { get }
 }

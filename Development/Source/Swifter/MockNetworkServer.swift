@@ -207,7 +207,7 @@ extension HttpRequest: HttpRequestProtocol {
         try? JSON(data: Data(body))
     }
     
-    public var headersDictionary: [String : String]? {
+    public var headersDictionary: [String : String] {
         headers
     }
 }

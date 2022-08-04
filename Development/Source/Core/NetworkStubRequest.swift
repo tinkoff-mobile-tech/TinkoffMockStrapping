@@ -34,14 +34,14 @@ public struct NetworkStubRequest: HttpRequestProtocol, Equatable {
     
     /// Заголовки запроса.
     /// Headers
-    public let headersDictionary: [String : String]?
+    public let headersDictionary: [String : String]
 
     public init(url: String,
                 query: [String: String] = [:],
                 excludedQuery: [String: String?] = [:],
                 httpMethod: NetworkStubMethod = .ANY,
                 bodyJson: JSON? = nil,
-                headersDictionary: [String : String]? = nil) {
+                headersDictionary: [String : String] = [:]) {
 
         self.url = url
         self.query = query
