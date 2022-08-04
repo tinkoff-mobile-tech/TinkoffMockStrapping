@@ -27,4 +27,8 @@ public protocol HttpRequestProtocol {
     /// HTTP-метод запроса
     /// Http-method
     var httpMethod: NetworkStubMethod { get }
+    
+    /// Заголовки запроса.
+    /// Headers
+    var headersDictionary: [String: String]? { get }
 }

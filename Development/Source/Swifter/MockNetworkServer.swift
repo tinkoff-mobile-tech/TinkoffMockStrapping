@@ -206,6 +206,10 @@ extension HttpRequest: HttpRequestProtocol {
     public var bodyJson: JSON? {
         try? JSON(data: Data(body))
     }
+    
+    public var headersDictionary: [String : String]? {
+        headers
+    }
 }
 
 // MARK: - JSON Extension
