@@ -31,18 +31,24 @@ public struct NetworkStubRequest: HttpRequestProtocol, Equatable {
     /// Body-параметр запроса
     /// Body-params
     public var bodyJson: JSON?
+    
+    /// Заголовки запроса.
+    /// Headers
+    public let headersDictionary: [String : String]
 
     public init(url: String,
                 query: [String: String] = [:],
                 excludedQuery: [String: String?] = [:],
                 httpMethod: NetworkStubMethod = .ANY,
-                bodyJson: JSON? = nil) {
+                bodyJson: JSON? = nil,
+                headersDictionary: [String : String] = [:]) {
 
         self.url = url
         self.query = query
         self.excludedQuery = excludedQuery
         self.httpMethod = httpMethod
         self.bodyJson = bodyJson
+        self.headersDictionary = headersDictionary
     }
 }
 
@@ -60,6 +66,32 @@ public extension NetworkStubRequest {
         let isQueryMatched = query.allSatisfy { args in
             request.query.contains { key, value in args.key == key && args.value == value }
         }
+        
+        let isHeadersDictionaryMatched = headersDictionary.allSatisfy { args in
+            request.headersDictionary.contains { key, value in
+                args.key == key && args.value == value
+            }
+        }
+        
+        let isBodyMatched: Bool = {
+            guard let bodyJson = bodyJson,
+                  let requestBodyJson = request.bodyJson else {
+                      return true
+                  }
+            guard let bodyString = bodyJson.rawString(),
+                  let requestBodyString = requestBodyJson.rawString(),
+                  let bodyDictionary = convertToDictionary(jsonString: bodyString),
+                  let requestBodyDictionary = convertToDictionary(jsonString: requestBodyString) else {
+                      return false
+                  }
+            return bodyDictionary.allSatisfy { args in
+                requestBodyDictionary.contains { key, value in
+                    guard let rawValue = JSON(rawValue: args.value),
+                          let requestRawValue = JSON(rawValue: value) else { return false }
+                    return args.key == key && rawValue == requestRawValue
+                }
+            }
+        }()
 
         var isExcludedQueryContained = false
         excludedQuery.forEach { argKey, argValue in
@@ -74,6 +106,25 @@ public extension NetworkStubRequest {
             isExcludedQueryContained = isExcludedQueryContained || result
         }
 
-        return isQueryMatched && !isExcludedQueryContained
+        return isQueryMatched && isHeadersDictionaryMatched &&
+        isBodyMatched && !isExcludedQueryContained
+    }
+}
+
+// MARK: - Helpers
+
+private extension NetworkStubRequest {
+    
+    /// Converts JSON string to Dictionary
+    /// - Parameter jsonString: a JSON string to convert to dictionary
+    func convertToDictionary(jsonString: String) -> [String: Any]? {
+        if let data = jsonString.data(using: .utf8) {
+            do {
+                return try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
+            } catch {
+                print(error.localizedDescription)
+            }
+        }
+        return nil
     }
 }
