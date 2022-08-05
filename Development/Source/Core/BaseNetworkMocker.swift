@@ -147,6 +147,6 @@ private extension BaseNetworkMocker {
         let query: [String: String]
         let bodyJson: JSON?
         let httpMethod: NetworkStubMethod
-        let headersDictionary: [String : String]
+        let headersDictionary: [String: String]
     }
 }

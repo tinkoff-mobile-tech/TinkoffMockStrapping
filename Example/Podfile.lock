@@ -5,9 +5,9 @@ PODS:
   - SwiftGen (6.1.0)
   - SwiftLint (0.35.0)
   - SwiftyJSON (5.0.1)
-  - TinkoffMockStrapping/Core (0.1.0):
+  - TinkoffMockStrapping/Core (0.2.0):
     - SwiftyJSON (~> 5.0.0)
-  - TinkoffMockStrapping/Swifter (0.1.0):
+  - TinkoffMockStrapping/Swifter (0.2.0):
     - Swifter (~> 1.5.0)
     - TinkoffMockStrapping/Core
 
@@ -39,7 +39,7 @@ SPEC CHECKSUMS:
   SwiftGen: f872ca75cbd17bf7103c17f13dcfa0d9a15667b0
   SwiftLint: 5553187048b900c91aa03552807681bb6b027846
   SwiftyJSON: 2f33a42c6fbc52764d96f13368585094bfd8aa5e
-  TinkoffMockStrapping: 446fbc1035471195885103717605ca776b5fc52e
+  TinkoffMockStrapping: e40a0c882c45c964281e012e79e5171f22699b28
 
 PODFILE CHECKSUM: 9c6580bce35963e57370484f53cbdfcd5674cf4c
 
