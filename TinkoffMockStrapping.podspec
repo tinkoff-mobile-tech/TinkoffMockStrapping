@@ -4,7 +4,7 @@ Pod::Spec.new do |s|
   
   s.name     = 'TinkoffMockStrapping'
   s.summary  = 'Library for unifying the approach to network mocking in unit- & UI-tests.'
-  s.version  = '0.1.0'
+  s.version  = '0.2.0'
   s.homepage = 'https://github.com/tinkoff-mobile-tech/TinkoffMockStrapping'
   
   # ―――  Spec License  ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #

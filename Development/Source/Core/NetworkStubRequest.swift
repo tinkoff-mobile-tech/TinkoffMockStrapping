@@ -31,17 +31,17 @@ public struct NetworkStubRequest: HttpRequestProtocol, Equatable {
     /// Body-параметр запроса
     /// Body-params
     public var bodyJson: JSON?
-    
+
     /// Заголовки запроса.
     /// Headers
-    public let headersDictionary: [String : String]
+    public let headersDictionary: [String: String]
 
     public init(url: String,
                 query: [String: String] = [:],
                 excludedQuery: [String: String?] = [:],
                 httpMethod: NetworkStubMethod = .ANY,
                 bodyJson: JSON? = nil,
-                headersDictionary: [String : String] = [:]) {
+                headersDictionary: [String: String] = [:]) {
 
         self.url = url
         self.query = query
@@ -66,28 +66,28 @@ public extension NetworkStubRequest {
         let isQueryMatched = query.allSatisfy { args in
             request.query.contains { key, value in args.key == key && args.value == value }
         }
-        
+
         let isHeadersDictionaryMatched = headersDictionary.allSatisfy { args in
             request.headersDictionary.contains { key, value in
                 args.key == key && args.value == value
             }
         }
-        
+
         let isBodyMatched: Bool = {
             guard let bodyJson = bodyJson,
-                  let requestBodyJson = request.bodyJson else {
-                      return true
-                  }
+                let requestBodyJson = request.bodyJson else {
+                return true
+            }
             guard let bodyString = bodyJson.rawString(),
-                  let requestBodyString = requestBodyJson.rawString(),
-                  let bodyDictionary = convertToDictionary(jsonString: bodyString),
-                  let requestBodyDictionary = convertToDictionary(jsonString: requestBodyString) else {
-                      return false
-                  }
+                let requestBodyString = requestBodyJson.rawString(),
+                let bodyDictionary = convertToDictionary(jsonString: bodyString),
+                let requestBodyDictionary = convertToDictionary(jsonString: requestBodyString) else {
+                return false
+            }
             return bodyDictionary.allSatisfy { args in
                 requestBodyDictionary.contains { key, value in
                     guard let rawValue = JSON(rawValue: args.value),
-                          let requestRawValue = JSON(rawValue: value) else { return false }
+                        let requestRawValue = JSON(rawValue: value) else { return false }
                     return args.key == key && rawValue == requestRawValue
                 }
             }
@@ -107,14 +107,14 @@ public extension NetworkStubRequest {
         }
 
         return isQueryMatched && isHeadersDictionaryMatched &&
-        isBodyMatched && !isExcludedQueryContained
+            isBodyMatched && !isExcludedQueryContained
     }
 }
 
 // MARK: - Helpers
 
 private extension NetworkStubRequest {
-    
+
     /// Converts JSON string to Dictionary
     /// - Parameter jsonString: a JSON string to convert to dictionary
     func convertToDictionary(jsonString: String) -> [String: Any]? {
