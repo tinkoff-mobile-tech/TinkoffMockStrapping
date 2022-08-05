@@ -121,6 +121,8 @@ public extension BaseNetworkMocker {
             .filter { $0.request.matches(to: request) }
             .sorted { $0.request.query.count > $1.request.query.count }
             .sorted { $0.request.headersDictionary.count > $1.request.headersDictionary.count }
+            .sorted { $0.request.bodyJson?.rawString()?.count ?? 0 >
+                $1.request.bodyJson?.rawString()?.count ?? 0 }
             .first
 
         let historyRequest = HistoryHttpRequest(url: request.url,

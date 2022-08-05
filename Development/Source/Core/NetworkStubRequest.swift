@@ -67,6 +67,12 @@ public extension NetworkStubRequest {
             request.query.contains { key, value in args.key == key && args.value == value }
         }
         
+        let isHeadersDictionaryMatched = headersDictionary.allSatisfy { args in
+            request.headersDictionary.contains { key, value in
+                args.key == key && args.value == value
+            }
+        }
+        
         let isBodyMatched: Bool = {
             guard let bodyJson = bodyJson,
                   let requestBodyJson = request.bodyJson else {
@@ -100,7 +106,8 @@ public extension NetworkStubRequest {
             isExcludedQueryContained = isExcludedQueryContained || result
         }
 
-        return isQueryMatched && isBodyMatched && !isExcludedQueryContained
+        return isQueryMatched && isHeadersDictionaryMatched &&
+        isBodyMatched && !isExcludedQueryContained
     }
 }
 
