@@ -30,4 +30,8 @@ public enum NetworkStubResponse {
     /// Network error
     /// - Warning: this error doesn't work  in UI tests
     case connectionError
+
+    /// Ответ http сервера, с возможностью указать заголовки и код ответа
+    /// Http response with headers and status code
+    case response(HttpResponseStubProtocol)
 }
