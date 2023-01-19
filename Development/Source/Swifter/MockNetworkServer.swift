@@ -183,6 +183,20 @@ private extension MockNetworkServer {
             fatalError("ATTENTION! " +
                 "The `\(String(describing: responseStub.response))` " +
                 "does not supported in the UI tests.")
+        case let .response(response):
+            guard let data = processHTTPBody(response.body) else {
+                return .internalServerError
+            }
+            return .raw(response.statusCode, response.reasonPhrase, response.headers, { try? $0.write(data) })
+        }
+    }
+
+    func processHTTPBody(_ body: HttpBodyStub) -> Data? {
+        switch body {
+        case let .json(json):
+            return json.rawData()
+        case let .data(data):
+            return data
         }
     }
 }
