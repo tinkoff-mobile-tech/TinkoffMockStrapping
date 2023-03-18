@@ -44,7 +44,7 @@ public struct NetworkStubRequest: HttpRequestProtocol, Equatable {
                 httpMethod: NetworkStubMethod = .ANY,
                 bodyJson: JSON? = nil,
                 headersDictionary: [String: String] = [:],
-                egexPatternBody: String? = nil) {
+                regexPatternBody: String? = nil) {
 
         self.url = url
         self.query = query
