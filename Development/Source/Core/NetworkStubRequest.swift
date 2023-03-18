@@ -35,13 +35,16 @@ public struct NetworkStubRequest: HttpRequestProtocol, Equatable {
     /// Заголовки запроса.
     /// Headers
     public let headersDictionary: [String: String]
+    
+    public var regexPatternBody: String?
 
     public init(url: String,
                 query: [String: String] = [:],
                 excludedQuery: [String: String?] = [:],
                 httpMethod: NetworkStubMethod = .ANY,
                 bodyJson: JSON? = nil,
-                headersDictionary: [String: String] = [:]) {
+                headersDictionary: [String: String] = [:],
+                egexPatternBody: String? = nil) {
 
         self.url = url
         self.query = query
@@ -49,6 +52,7 @@ public struct NetworkStubRequest: HttpRequestProtocol, Equatable {
         self.httpMethod = httpMethod
         self.bodyJson = bodyJson
         self.headersDictionary = headersDictionary
+        self.regexPatternBody = regexPatternBody
     }
 }
 
@@ -92,6 +96,16 @@ public extension NetworkStubRequest {
                 }
             }
         }()
+        
+        let isBodyMatchedRegex: Bool = {
+            guard let regexPatternBody = regexPatternBody,
+                  let requestBodyJson = request.bodyJson,
+                  let requestBodyString = requestBodyJson.rawString() else {
+                return true
+            }
+
+            return doesMatchRegex(regexPattern: regexPatternBody, inputString: requestBodyString)
+        }()
 
         var isExcludedQueryContained = false
         excludedQuery.forEach { argKey, argValue in
@@ -107,7 +121,7 @@ public extension NetworkStubRequest {
         }
 
         return isQueryMatched && isHeadersDictionaryMatched &&
-            isBodyMatched && !isExcludedQueryContained
+            isBodyMatched && !isExcludedQueryContained && isBodyMatchedRegex
     }
 }
 
@@ -126,5 +140,16 @@ private extension NetworkStubRequest {
             }
         }
         return nil
+    }
+    
+    func doesMatchRegex(regexPattern: String, inputString: String) -> Bool {
+        do {
+            let regex = try NSRegularExpression(pattern: regexPattern)
+            let range = NSRange(inputString.startIndex..., in: inputString)
+            return regex.firstMatch(in: inputString, options: [], range: range) != nil
+        } catch {
+            print("Ошибка при создании регулярного выражения: \(error.localizedDescription)")
+            return false
+        }
     }
 }
