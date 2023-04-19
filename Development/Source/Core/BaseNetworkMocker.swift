@@ -12,8 +12,8 @@ import SwiftyJSON
 /// Base class for network mock server or client
 open class BaseNetworkMocker {
 
-    @ThreadSafely
-    private var historyStorage: [(request: HttpRequestProtocol, response: NetworkStubResponse)] = []
+    private let historyStorage: Atomic<[(request: HttpRequestProtocol, response: NetworkStubResponse)]> = Atomic([])
+    private let _stubs: Atomic<[NetworkStubProtocol]> = Atomic([])
 
     /// Логирует сетевые запросы.
     /// Loggs requests
@@ -21,7 +21,9 @@ open class BaseNetworkMocker {
 
     /// Хранилище стабов.
     /// Stubs storage
-    public private(set) var stubs: [NetworkStubProtocol] = []
+    public var stubs: [NetworkStubProtocol] {
+        return _stubs.value
+    }
 
     /// Инициализирует класс сервера.
     /// Initializer
@@ -37,7 +39,7 @@ open class BaseNetworkMocker {
     /// - Parameter stub: stub
     open func setStub(_ stub: NetworkStubProtocol) {
         removeStub(stub)
-        stubs.append(stub)
+        _stubs.mutate { $0.append(stub) }
     }
 
     /// Удаляет указанный стаб из коллекции установленных стабов.
@@ -45,13 +47,13 @@ open class BaseNetworkMocker {
     /// Removes stub
     /// - Parameter stub: stub for removing
     open func removeStub(_ stub: NetworkStubProtocol) {
-        stubs.removeAll { $0.request == stub.request }
+        _stubs.mutate { values in values.removeAll { $0.request == stub.request } }
     }
 
     /// Удаляет все стабы из коллекции установленных стабов.
     /// Removes all stubs
     open func removeAllStubs() {
-        stubs.removeAll()
+        _stubs.mutate { $0.removeAll() }
     }
 }
 
@@ -61,12 +63,12 @@ extension BaseNetworkMocker: MockNetworkHistoryProtocol {
 
     /// Хранилище запросов с ответами на них.
     /// Requests and response storage
-    public var history: [(request: HttpRequestProtocol, response: NetworkStubResponse)] { historyStorage }
+    public var history: [(request: HttpRequestProtocol, response: NetworkStubResponse)] { historyStorage.value }
 
     /// Очищает историю запросов.
     /// Clear requests history
     public func clearHistory() {
-        historyStorage.removeAll()
+        historyStorage.mutate { $0.removeAll() }
     }
 
     /// Проверяет, был ли выполнен запрос по указанному URL с указанными параметрами.
@@ -96,7 +98,7 @@ extension BaseNetworkMocker: MockNetworkHistoryProtocol {
     // MARK: Private
 
     private func invokedTimes(_ historyEntry: HttpRequestProtocol) -> Int {
-        return historyStorage.filter { entry, _ in
+        return historyStorage.value.filter { entry, _ in
             entry.url == historyEntry.url && historyEntry.query.allSatisfy { entry.query[$0.key] == $0.value }
         }.count
     }
@@ -117,7 +119,7 @@ public extension BaseNetworkMocker {
 
         // Выбираем все подходящие стабы, затем сортируем их по количеству параметров запроса и
         // берем тот стаб, у которого больше всего параметров запроса. Он должен лучше всего подходить.
-        let matchedStub = stubs
+        let matchedStub = _stubs.value
             .filter { $0.request.matches(to: request) }
             .sorted { $0.request.query.count > $1.request.query.count }
             .sorted { $0.request.headersDictionary.count > $1.request.headersDictionary.count }
@@ -130,11 +132,15 @@ public extension BaseNetworkMocker {
                                                 headersDictionary: request.headersDictionary)
 
         guard let responseStub = matchedStub else {
-            historyStorage.append((request: historyRequest, response: NetworkStubResponse.error(.notFoundError)))
+            historyStorage.mutate {
+                $0.append((request: historyRequest, response: NetworkStubResponse.error(.notFoundError)))
+            }
             return nil
         }
 
-        historyStorage.append((request: historyRequest, response: responseStub.response))
+        historyStorage.mutate {
+            $0.append((request: historyRequest, response: responseStub.response))
+        }
         return responseStub
     }
 }
